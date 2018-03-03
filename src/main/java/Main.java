@@ -20,8 +20,8 @@ public class Main extends HttpServlet {
             throws ServletException, IOException {
         resp.setContentType("application/json");
         PrintWriter writer = resp.getWriter();
-//        writer.println("{'Hello':'World'}");
-        writer.println(getOutService.sayGetOut("bro"));
+        writer.println("{'Hello':'World'}");
+//        writer.println(getOutService.sayGetOut("bro"));
         writer.close();
     }
 }
