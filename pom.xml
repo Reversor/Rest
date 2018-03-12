@@ -3,43 +3,43 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>ru.reversor</groupId>
-  <artifactId>RestTest</artifactId>
+  <artifactId>roach</artifactId>
   <packaging>war</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>RestTest Maven Webapp</name>
   <url>http://localhost:8080/</url>
-  <profiles>
-    <profile>
-      <id>localhost</id>
-      <properties>
-        <wildfly-hostname>localhost</wildfly-hostname>
-        <wildfly-port>9990</wildfly-port>
-        <wildfly-username>admin</wildfly-username>
-        <wildfly-password>admin</wildfly-password>
-        <wildfly-name>core.war</wildfly-name>
-      </properties>
-    </profile>
-  </profiles>
+  <repositories>
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>4.2.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-      <version>5.2.13.Final</version>
-    </dependency>
-    <dependency>
       <groupId>org.jboss.spec</groupId>
-      <artifactId>jboss-javaee-all-7.0</artifactId>
+      <artifactId>jboss-javaee-web-7.0</artifactId>
       <version>1.1.1.Final</version>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+      <version>3.3.2.Final</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -50,8 +50,39 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.2.0</version>
+        <configuration>
+          <warName>roach</warName>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.wildfly.plugins</groupId>
+        <artifactId>wildfly-maven-plugin</artifactId>
+        <version>1.2.1.Final</version>
+        <configuration>
+          <runtime-name>roach.war</runtime-name>
+          <profiles>
+            <profile>
+              <id>localhost</id>
+              <properties>
+                <wildfly-hostname>localhost</wildfly-hostname>
+                <wildfly-port>9990</wildfly-port>
+                <wildfly-username>admin</wildfly-username>
+                <wildfly-password>admin</wildfly-password>
+                <wildfly-name>roach.war</wildfly-name>
+              </properties>
+            </profile>
+          </profiles>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
       </plugin>
     </plugins>
-    <finalName>RestTest</finalName>
+    <finalName>roach</finalName>
   </build>
 </project>
