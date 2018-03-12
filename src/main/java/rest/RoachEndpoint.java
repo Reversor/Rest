@@ -1,7 +1,6 @@
 package rest;
 
 import enitities.Roach;
-import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -39,6 +38,13 @@ public class RoachEndpoint {
     }
 
     @GET
+    @Path("/send")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Roach setRoach(@QueryParam("name") String name, @QueryParam("fill") byte fill) {
+        return roachService.setRoach(new Roach(name, fill));
+    }
+
+    @GET
     @Path("/get")
     @Produces(MediaType.APPLICATION_JSON)
     public Roach getRoach() {
@@ -48,7 +54,7 @@ public class RoachEndpoint {
     @GET
     @Path("/{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Roach getRoachForName(@PathParam("name")String name) {
+    public Roach getRoachForName(@PathParam("name") String name) {
         return new Roach(name, (byte) 10);
     }
 }
