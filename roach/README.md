@@ -3,7 +3,7 @@
 Test project for rest
 ## Build
 In command line: \
-`mvn clean install`
+`mvn war:war`
 ## Test
 In command line: \
 `mvn test`

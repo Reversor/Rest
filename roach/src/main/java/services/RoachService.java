@@ -1,9 +1,9 @@
 package services;
 
-import enitities.Roach;
+import entities.Roach;
+import exceptions.RoachNotFoundException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 @Singleton
@@ -27,21 +27,34 @@ public class RoachService {
         return false;
     }
 
-    public boolean transmit() {
+    public void lure() {
         // FIXME
+    }
+
+    public Roach kick() throws RoachNotFoundException {
+        if (roach == null || roach.getName() == null) {
+            throw new RoachNotFoundException();
+        }
         byte fill = roach.getFill();
         if (fill > 0) {
             roach.setFill(--fill);
-            return true;
+            return roach;
         }
-        return false;
-    }
-
-    public Roach getRoach() {
         return roach;
     }
 
-    public Roach setRoach(Roach roach) {
-        return this.roach = roach;
+    public Roach find() throws RoachNotFoundException {
+        if (roach != null && roach.getName() != null) {
+            return roach;
+        }
+        throw new RoachNotFoundException("Roach not found");
+    }
+
+    public Roach get() {
+        try {
+            return find();
+        } catch (RoachNotFoundException e) {
+            return roach = new Roach("Zhenya", (byte) 0);
+        }
     }
 }

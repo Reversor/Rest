@@ -1,57 +1,30 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>ru.reversor</groupId>
-  <artifactId>roach</artifactId>
-  <packaging>war</packaging>
+  <artifactId>RestTest</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>RestTest Maven Webapp</name>
-  <url>http://localhost:8080/</url>
-  <repositories>
-    <repository>
-      <id>jboss-public-repository-group</id>
-      <name>JBoss Public Repository Group</name>
-      <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-      <layout>default</layout>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </snapshots>
-    </repository>
-  </repositories>
-  <dependencies>
-    <dependency>
-      <groupId>org.jboss.spec</groupId>
-      <artifactId>jboss-javaee-web-7.0</artifactId>
-      <version>1.1.1.Final</version>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.logging</groupId>
-      <artifactId>jboss-logging</artifactId>
-      <version>3.3.2.Final</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+  <name>Rest test</name>
+  <description>Test project</description>
+  <url>http://locomizer.com</url>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>roach</module>
+    <module>roachInterface</module>
+  </modules>
+
   <build>
-    <directory>${env.JBOSS_HOME}\standalone\deployments</directory>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.2.0</version>
         <configuration>
-          <warName>roach</warName>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
         </configuration>
       </plugin>
       <plugin>
@@ -66,23 +39,14 @@
               <properties>
                 <wildfly-hostname>localhost</wildfly-hostname>
                 <wildfly-port>9990</wildfly-port>
-                <wildfly-username>admin</wildfly-username>
-                <wildfly-password>admin</wildfly-password>
+                <wildfly-username>reversor</wildfly-username>
+                <wildfly-password>revers914</wildfly-password>
                 <wildfly-name>roach.war</wildfly-name>
               </properties>
             </profile>
           </profiles>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
     </plugins>
-    <finalName>roach</finalName>
   </build>
 </project>
