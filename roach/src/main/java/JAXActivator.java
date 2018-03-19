@@ -1,6 +1,7 @@
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import java.util.HashSet;
 import java.util.Set;
+import javax.ejb.Asynchronous;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import rest.RoachEndpoint;
