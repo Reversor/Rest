@@ -2,20 +2,14 @@ package entities;
 
 public class Node {
 
-    private final int id;
     private String url;
     private String path;
     private int port;
 
-    public Node(int id, String url, String path, int port) {
-        this.id = id;
+    public Node(String url, String path, int port) {
         this.url = url;
         this.path = path;
         this.port = port;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public String getUrl() {
@@ -45,7 +39,7 @@ public class Node {
 
     @Override
     public String toString() {
-        return url + ':' + port + path;
+        return url + ':' + port + '/' + path;
     }
 
     @Override

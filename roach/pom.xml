@@ -11,11 +11,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>ru.reversor</groupId>
-      <artifactId>roach</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
       <groupId>javax.enterprise</groupId>
       <artifactId>cdi-api</artifactId>
       <version>2.0</version>
@@ -46,7 +41,12 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.196</version>
+      <version>1.4.197</version>
+    </dependency>
+    <dependency>
+      <groupId>ru.reversor</groupId>
+      <artifactId>cockroach</artifactId>
+      <version>v1.0</version>
     </dependency>
   </dependencies>
 
@@ -61,6 +61,34 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.wildfly.plugins</groupId>
+        <artifactId>wildfly-maven-plugin</artifactId>
+        <version>1.2.1.Final</version>
+        <configuration>
+          <runtime-name>roach.war</runtime-name>
+          <profiles>
+            <profile>
+              <id>localhost</id>
+              <properties>
+                <wildfly-hostname>localhost</wildfly-hostname>
+                <wildfly-port>9990</wildfly-port>
+                <wildfly-username>reversor</wildfly-username>
+                <wildfly-password>revers914</wildfly-password>
+                <wildfly-name>roach.war</wildfly-name>
+              </properties>
+            </profile>
+          </profiles>
         </configuration>
       </plugin>
     </plugins>

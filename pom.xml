@@ -14,39 +14,7 @@
 
   <modules>
     <module>roach</module>
-    <module>roachInterface</module>
+    <module>cockroachInterface</module>
   </modules>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-war-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration>
-          <failOnMissingWebXml>false</failOnMissingWebXml>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.wildfly.plugins</groupId>
-        <artifactId>wildfly-maven-plugin</artifactId>
-        <version>1.2.1.Final</version>
-        <configuration>
-          <runtime-name>roach.war</runtime-name>
-          <profiles>
-            <profile>
-              <id>localhost</id>
-              <properties>
-                <wildfly-hostname>localhost</wildfly-hostname>
-                <wildfly-port>9990</wildfly-port>
-                <wildfly-username>reversor</wildfly-username>
-                <wildfly-password>revers914</wildfly-password>
-                <wildfly-name>roach.war</wildfly-name>
-              </properties>
-            </profile>
-          </profiles>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

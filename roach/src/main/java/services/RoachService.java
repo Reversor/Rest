@@ -1,29 +1,28 @@
 package services;
 
+import dao.NodeDao;
+import entities.Node;
 import entities.Roach;
-import exceptions.RoachNotFoundException;
+import exceptions.RoachException;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import org.jboss.logging.Logger;
 
 @Singleton
 public class RoachService {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
-
     @Inject
     private Roach roach;
 
+    @Inject
+    private NodeDao nodeDao;
+
     public boolean feed() {
-        logger.info("Try eat");
         byte fill = roach.getFill();
         if (fill < 10) {
             roach.setFill(++fill);
-            logger.info(this);
-            logger.info("eat up");
             return true;
         }
-        logger.info("no hunger");
         return false;
     }
 
@@ -31,29 +30,30 @@ public class RoachService {
         // FIXME
     }
 
-    public Roach kick() throws RoachNotFoundException {
+    public boolean kick() throws RoachException {
         if (roach == null || roach.getName() == null) {
-            throw new RoachNotFoundException();
+            throw new RoachException();
         }
         byte fill = roach.getFill();
         if (fill > 0) {
             roach.setFill(--fill);
-            return roach;
+            return true;
         }
-        return roach;
+        return false;
     }
 
-    public Roach find() throws RoachNotFoundException {
+    public Roach find() throws RoachException {
         if (roach != null && roach.getName() != null) {
+            Set<Node> nodes = nodeDao.getAll();
             return roach;
         }
-        throw new RoachNotFoundException("Roach not found");
+        throw new RoachException("Roach not found");
     }
 
     public Roach get() {
         try {
             return find();
-        } catch (RoachNotFoundException e) {
+        } catch (RoachException e) {
             return roach = new Roach("Zhenya", (byte) 0);
         }
     }

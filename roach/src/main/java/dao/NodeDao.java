@@ -6,8 +6,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.inject.Singleton;
 import org.h2.jdbcx.JdbcDataSource;
 
@@ -20,29 +20,37 @@ public class NodeDao {
         init();
     }
 
-    public Message insert() {
+    public Message insert(Node node) {
         // TODO
-        /*try () {
-
+        try (Connection conn = ds.getConnection();
+                Statement st = conn.createStatement()) {
+            String query = new StringBuilder("INSERT INTO NODE (url, path, port) VALUES (")
+                    .append(node.getUrl()).append(", ")
+                    .append(node.getPath()).append(", ")
+                    .append(node.getPort()).append(");")
+                    .toString();
+            st.execute(query);
         } catch (SQLException e) {
-
-        }*/
+            // FIXME
+            e.printStackTrace();
+        }
         return null;
     }
 
-    public List<Node> getAll() {
+    public Set<Node> getAll() {
         try (Connection conn = ds.getConnection();
                 Statement st = conn.createStatement()) {
             ResultSet rs = st.executeQuery("SELECT * FROM NODE");
-            List<Node> nodeList = new ArrayList<>();
+            Set<Node> nodes = new HashSet<>();
             while (rs.next()) {
-                int id = rs.getInt(1);
-                String url = rs.getString(2);
-                String path = rs.getString(3);
-                int port = rs.getInt(4);
-                nodeList.add(new Node(id, url, path, port));
+                String url = rs.getString("url");
+                String path = rs.getString("path");
+                int port = rs.getInt("port");
+                nodes.add(new Node(url, path, port));
             }
+            return nodes;
         } catch (SQLException e) {
+            // FIXME
             e.printStackTrace();
         }
         return null;
@@ -50,17 +58,21 @@ public class NodeDao {
 
     private void init() {
         ds.setUrl("jdbc:h2:~/node");
-        /*try (Connection conn = ds.getConnection();
+        try (Connection conn = ds.getConnection();
                 Statement st = conn.createStatement()) {
-            // TODO init DB
-            ResultSet rs = st.executeQuery("CREATE TABLE IF NOT EXISTS node("
+            st.addBatch("DROP TABLE IF EXISTS NODE;");
+            st.addBatch("CREATE TABLE NODE("
                     + "id INT AUTO_INCREMENT PRIMARY KEY,"
                     + "url VARCHAR  NOT NULL,"
                     + "path VARCHAR NOT NULL,"
                     + "port INT DEFAULT 8080"
-                    + ")");
+                    + ");");
+            st.addBatch(
+                    "INSERT INTO NODE (url, path, port) VALUES ('localhost', 'roach', 8080);"
+            );
+            conn.commit();
         } catch (SQLException e) {
 
-        }*/
+        }
     }
 }
