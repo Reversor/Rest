@@ -29,18 +29,32 @@ public class RoachService {
         return false;
     }
 
-    public void lure() {
+    public Roach lure() throws RoachException {
+        byte fill = 0;
+        checkRoach();
+        if ((fill = roach.getFill()) > 0) {
+            try {
+                roach.setFill(--fill);
+                return roach;
+            } finally {
+                roach = null;
+            }
+        }
+        return null;
         // FIXME
     }
 
     public boolean kick() throws RoachException {
-        if (roach == null || roach.getName() == null) {
-            throw new RoachException();
-        }
-        byte fill = roach.getFill();
-        if (fill > 0) {
-            roach.setFill(--fill);
-            return true;
+        byte fill = 0;
+        checkRoach();
+        if ((fill = roach.getFill()) > 0) {
+            try {
+                roach.setFill(--fill);
+                // FIXME
+                return true;
+            } finally {
+                roach = null;
+            }
         }
         return false;
     }

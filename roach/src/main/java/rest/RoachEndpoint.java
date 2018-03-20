@@ -40,11 +40,14 @@ public class RoachEndpoint implements CockroachEndpoint {
                     @ApiResponse(responseCode = "404", description = "Cockroach not found")
             }
     )
-    @ApiResponse(responseCode = "200", description = "roach lured")
     @Override
     public Roach lure() {
-        // FIXME Node works
-        return null;
+        // FIXME Strange, maybe return Response.entity(roach).status(some status).build()
+        try {
+            return roachService.lure();
+        } catch (RoachException e) {
+            return null;
+        }
     }
 
     @PATCH
@@ -55,7 +58,9 @@ public class RoachEndpoint implements CockroachEndpoint {
             description = "Try feed cockroach, if fill = 10 ",
             method = HttpMethod.PATCH,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "at up")
+                    @ApiResponse(responseCode = "200", description = "Cockroach ate"),
+                    @ApiResponse(responseCode = "400", description = "Cockroach not hungry"),
+                    @ApiResponse(responseCode = "404", description = "Cockroach not found")
             }
     )
     @Override
@@ -63,9 +68,9 @@ public class RoachEndpoint implements CockroachEndpoint {
         try {
             roachService.checkRoach();
             if (roachService.feed()) {
-                return Response.ok().entity("eat up").build();
+                return Response.ok().entity("Eat up").build();
             }
-            return Response.status(412, "no hunger").build();
+            return Response.status(412, "Cockroach not hungry").build();
         } catch (RoachException e) {
             return NOT_FOUND;
         }
@@ -80,14 +85,18 @@ public class RoachEndpoint implements CockroachEndpoint {
             method = HttpMethod.DELETE,
             responses = {
                     @ApiResponse(responseCode = "200", description = "Cockroach was kicked"),
+                    @ApiResponse(responseCode = "400", description = "Cockroach hungry"),
                     @ApiResponse(responseCode = "404", description = "Cockroach not found")
             }
     )
     @Override
     public Response kick() {
         try {
-            roachService.kick();
-            return Response.ok("cockroach was kicked").build();
+            if (roachService.kick()) {
+                return Response.ok("Cockroach was kicked").build();
+            } else {
+                return Response.status(400, "Cockroach hungry").build();
+            }
         } catch (RoachException e) {
             return NOT_FOUND;
         }
@@ -101,7 +110,7 @@ public class RoachEndpoint implements CockroachEndpoint {
             description = "Get cockroach state in nodes",
             method = HttpMethod.GET,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Cockroach was kicked")
+                    @ApiResponse(responseCode = "200", description = "Cockroach state")
             }
     )
     @Override

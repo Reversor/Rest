@@ -1,4 +1,5 @@
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import java.util.HashSet;
 import java.util.Set;
 import javax.ejb.Asynchronous;
