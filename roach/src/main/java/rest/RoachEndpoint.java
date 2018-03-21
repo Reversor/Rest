@@ -1,7 +1,7 @@
 package rest;
 
 import entities.Roach;
-import exceptions.RoachException;
+import exceptions.CockroachException;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -15,14 +15,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import org.jboss.logging.Logger;
 import services.RoachService;
 
 @Path("/")
+@Produces(MediaType.APPLICATION_JSON)
 @OpenAPIDefinition(info = @Info(title = "Roach Heaven"))
 public class RoachEndpoint implements CockroachEndpoint {
 
-    private final static Response NOT_FOUND = Response.status(404, "Cockroach not found").build();
     private final Logger logger = Logger.getLogger(this.getClass());
 
     @Inject
@@ -30,7 +31,6 @@ public class RoachEndpoint implements CockroachEndpoint {
 
     @GET
     @Path("/lure")
-    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Lure cockroach",
             description = "Try lure cockroach",
@@ -41,12 +41,11 @@ public class RoachEndpoint implements CockroachEndpoint {
             }
     )
     @Override
-    public Roach lure() {
-        // FIXME Strange, maybe return Response.entity(roach).status(some status).build()
+    public Response lure() {
         try {
-            return roachService.lure();
-        } catch (RoachException e) {
-            return null;
+            return Response.ok(roachService.lure()).build();
+        } catch (CockroachException e) {
+            return Response.status(Status.NOT_FOUND).build();
         }
     }
 
@@ -59,7 +58,7 @@ public class RoachEndpoint implements CockroachEndpoint {
             method = HttpMethod.PATCH,
             responses = {
                     @ApiResponse(responseCode = "200", description = "Cockroach ate"),
-                    @ApiResponse(responseCode = "400", description = "Cockroach not hungry"),
+                    @ApiResponse(responseCode = "200", description = "Cockroach not hungry"),
                     @ApiResponse(responseCode = "404", description = "Cockroach not found")
             }
     )
@@ -68,11 +67,11 @@ public class RoachEndpoint implements CockroachEndpoint {
         try {
             roachService.checkRoach();
             if (roachService.feed()) {
-                return Response.ok().entity("Eat up").build();
+                return Response.ok("Eat up").build();
             }
-            return Response.status(412, "Cockroach not hungry").build();
-        } catch (RoachException e) {
-            return NOT_FOUND;
+            return Response.ok("Cockroach not hungry").build();
+        } catch (CockroachException e) {
+            return Response.status(Status.NOT_FOUND).build();
         }
     }
 
@@ -89,8 +88,7 @@ public class RoachEndpoint implements CockroachEndpoint {
                     @ApiResponse(responseCode = "404", description = "Cockroach not found")
             }
     )
-    @Override
-    public Response kick() {
+    /*public Response kick() {
         try {
             if (roachService.kick()) {
                 return Response.ok("Cockroach was kicked").build();
@@ -98,13 +96,21 @@ public class RoachEndpoint implements CockroachEndpoint {
                 return Response.status(400, "Cockroach hungry").build();
             }
         } catch (RoachException e) {
-            return NOT_FOUND;
+            return Response.status(404, "NOT FOUND").build();
+        }
+    }*/
+    @Override
+    public Response kick() {
+        try {
+            roachService.kick();
+            return Response.ok("roach was kicked").build();
+        } catch (CockroachException e) {
+            return Response.status(Status.NOT_FOUND).build();
         }
     }
 
     @GET
     @Path("/get")
-    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Cockroach state",
             description = "Get cockroach state in nodes",

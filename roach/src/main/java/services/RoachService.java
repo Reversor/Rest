@@ -3,20 +3,18 @@ package services;
 import dao.NodeDao;
 import entities.Node;
 import entities.Roach;
-import exceptions.RoachException;
+import exceptions.CockroachException;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.client.Client;
 
 @Singleton
 public class RoachService {
 
-    private Client nodeClient;
-
+    @Inject
+    NodeManager nodeManager;
     @Inject
     private Roach roach;
-
     @Inject
     private NodeDao nodeDao;
 
@@ -29,7 +27,7 @@ public class RoachService {
         return false;
     }
 
-    public Roach lure() throws RoachException {
+    public Roach lure() throws CockroachException {
         byte fill = 0;
         checkRoach();
         if ((fill = roach.getFill()) > 0) {
@@ -44,7 +42,7 @@ public class RoachService {
         // FIXME
     }
 
-    public boolean kick() throws RoachException {
+    public boolean kick() throws CockroachException {
         byte fill = 0;
         checkRoach();
         if ((fill = roach.getFill()) > 0) {
@@ -59,17 +57,17 @@ public class RoachService {
         return false;
     }
 
-    public Roach checkRoach() throws RoachException {
+    public Roach checkRoach() throws CockroachException {
         if (roach != null && roach.getName() != null) {
             return roach;
         }
-        throw new RoachException("Roach not found");
+        throw new CockroachException("Roach not found");
     }
 
     public Roach get() {
         try {
             return checkRoach();
-        } catch (RoachException e) {
+        } catch (CockroachException e) {
             Set<Node> nodes = nodeDao.getAll();
             // TODO
             return roach = new Roach("Zhenya", (byte) 0);
