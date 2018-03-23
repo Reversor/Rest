@@ -5,32 +5,37 @@ import entities.Node;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.ejb.Schedule;
+import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import org.jboss.logging.Logger;
 
-@Startup
 @Singleton
 public class NodeManager {
 
     @Inject
-    NodeDao nodeDao;
-    Client client;
+    private NodeDao nodeDao;
+    private Client client;
+    private Set<Node> nodes;
     private Logger logger = Logger.getLogger(this.getClass());
-    Set<Node> nodes;
 
     @PostConstruct
-    private void init(){
+    private void init() {
         client = ClientBuilder.newClient();
         nodes = nodeDao.getAll();
+        logger.debug("init");
+        checkNodes();
     }
 
-    @Schedule(second = "*/20")
+    @Schedule(second = "*/20", minute = "*", hour = "*", persistent = false)
     public void checkNodes() {
         logger.info("Check nodes");
+//        Client client = ClientBuilder.newClient();
+//        WebTarget target = client.target("http://localhost:11327/roach/get");
+//        logger.info(target.request().buildGet().invoke().getEntity());
+//        client.close();
         logger.info(nodes);
         // TODO Http-client needed
     }
