@@ -84,26 +84,17 @@ public class RoachEndpoint implements CockroachEndpoint {
             method = HttpMethod.DELETE,
             responses = {
                     @ApiResponse(responseCode = "200", description = "Cockroach was kicked"),
-                    @ApiResponse(responseCode = "400", description = "Cockroach hungry"),
+                    @ApiResponse(responseCode = "200", description = "Cockroach hungry"),
                     @ApiResponse(responseCode = "404", description = "Cockroach not found")
             }
     )
-    /*public Response kick() {
-        try {
-            if (roachService.kick()) {
-                return Response.ok("Cockroach was kicked").build();
-            } else {
-                return Response.status(400, "Cockroach hungry").build();
-            }
-        } catch (RoachException e) {
-            return Response.status(404, "NOT FOUND").build();
-        }
-    }*/
     @Override
     public Response kick() {
         try {
-            roachService.kick();
-            return Response.ok("roach was kicked").build();
+            if (roachService.kick()) {
+                return Response.ok("roach was kicked").build();
+            }
+            return Response.ok("Cockroach hungry").build();
         } catch (CockroachException e) {
             return Response.status(Status.NOT_FOUND).build();
         }
@@ -122,6 +113,12 @@ public class RoachEndpoint implements CockroachEndpoint {
     @Override
     public Roach get() {
         return roachService.get();
+    }
+
+    @GET
+    @Path("/")
+    public Response alive() {
+        return Response.ok().build();
     }
 
 }

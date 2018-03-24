@@ -1,40 +1,72 @@
 package dao;
 
-import entities.Message;
 import entities.Node;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Singleton;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import org.h2.jdbcx.JdbcDataSource;
+import org.jboss.logging.Logger;
 
 @Singleton
 public class NodeDao {
 
+    private final Logger logger = Logger.getLogger(this.getClass());
+
     private JdbcDataSource ds = new JdbcDataSource();
 
-    public NodeDao() {
-        init();
-    }
+    {
+        try {
 
-    public Message insert(Node node) {
-        // TODO
+            Context initContext = new InitialContext();
+        } catch (NamingException e) {
+            e.printStackTrace();
+        }
+        ds.setUrl("jdbc:h2:~/node");
         try (Connection conn = ds.getConnection();
                 Statement st = conn.createStatement()) {
-            String query = new StringBuilder("INSERT INTO NODE (url, path, port) VALUES (")
-                    .append(node.getUrl()).append(", ")
-                    .append(node.getPath()).append(", ")
-                    .append(node.getPort()).append(");")
-                    .toString();
-            st.execute(query);
+            st.addBatch("DROP TABLE IF EXISTS NODE;");
+            st.addBatch("CREATE TABLE NODE("
+                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                    + "url VARCHAR  NOT NULL,"
+                    + "path VARCHAR NOT NULL,"
+                    + "port INT DEFAULT 8080"
+                    + ");"
+            );
+            st.addBatch(
+                    "INSERT INTO NODE (url, path, port) VALUES "
+                            + "('localhost', 'roach', 9417),"
+                            + "('localhost', 'roach', 8080);"
+            );
+            st.executeBatch();
+            conn.commit();
+        } catch (SQLException e) {
+            logger.warn(e.getMessage());
+        }
+    }
+
+    public boolean insert(Node node) {
+        // TODO
+        try (Connection conn = ds.getConnection();
+                PreparedStatement st = conn.
+                        prepareStatement("INSERT INTO NODE (url, path, port) VALUES (?,?,?)")) {
+            st.setString(1, node.getUrl());
+            st.setString(2, node.getPath());
+            st.setInt(3, node.getPort());
+            st.execute();
+            return true;
         } catch (SQLException e) {
             // FIXME
             e.printStackTrace();
+            return false;
         }
-        return null;
     }
 
     public Set<Node> getAll() {
@@ -56,23 +88,5 @@ public class NodeDao {
         return null;
     }
 
-    private void init() {
-        ds.setUrl("jdbc:h2:~/node");
-        try (Connection conn = ds.getConnection();
-                Statement st = conn.createStatement()) {
-            st.addBatch("DROP TABLE IF EXISTS NODE;");
-            st.addBatch("CREATE TABLE NODE("
-                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
-                    + "url VARCHAR  NOT NULL,"
-                    + "path VARCHAR NOT NULL,"
-                    + "port INT DEFAULT 8080"
-                    + ");");
-            st.addBatch(
-                    "INSERT INTO NODE (url, path, port) VALUES ('localhost', 'roach', 8080);"
-            );
-            conn.commit();
-        } catch (SQLException e) {
 
-        }
-    }
 }
