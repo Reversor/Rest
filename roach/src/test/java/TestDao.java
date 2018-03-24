@@ -1,6 +1,9 @@
 import dao.NodeDao;
 import entities.Node;
 import java.util.Set;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,4 +18,5 @@ public class TestDao extends Assert {
         assertEquals(1, nodes.size());
         System.out.println(nodes);
     }
+
 }
