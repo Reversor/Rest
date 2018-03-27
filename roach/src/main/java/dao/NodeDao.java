@@ -1,12 +1,16 @@
 package dao;
 
 import entities.Node;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 import javax.inject.Singleton;
 import javax.naming.Context;
@@ -23,6 +27,13 @@ public class NodeDao {
     private JdbcDataSource ds = new JdbcDataSource();
 
     {
+        Properties prop = new Properties();
+        try {
+            prop.load(new FileInputStream("db.properties"));
+        } catch (IOException e) {
+
+        }
+
         try {
 
             Context initContext = new InitialContext();
@@ -64,7 +75,7 @@ public class NodeDao {
             return true;
         } catch (SQLException e) {
             // FIXME
-            e.printStackTrace();
+            logger.warn(e.getMessage());
             return false;
         }
     }
@@ -83,7 +94,7 @@ public class NodeDao {
             return nodes;
         } catch (SQLException e) {
             // FIXME
-            e.printStackTrace();
+            logger.warn(e.getMessage());
         }
         return null;
     }

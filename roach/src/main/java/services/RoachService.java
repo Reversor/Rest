@@ -7,10 +7,10 @@ import exceptions.CockroachException;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
+import org.jboss.logging.Logger;
 
 @Singleton
 public class RoachService {
@@ -21,6 +21,7 @@ public class RoachService {
     private NodeManager nodeManager;
     @Inject
     private NodeDao nodeDao;
+    private Logger logger = Logger.getLogger(this.getClass());
 
     {
         client = ClientBuilder.newClient();
@@ -72,23 +73,32 @@ public class RoachService {
         throw new CockroachException("Roach not found");
     }
 
+    public boolean setRoach(Roach roach) {
+        if (roach != null) {
+            return false;
+        }
+        this.roach = roach;
+        return true;
+    }
+
     public Roach get() {
         try {
             return checkRoach();
-        } catch (CockroachException e) {
+        } catch (CockroachException cockroachException) {
             Set<Node> nodes = nodeManager.getLivingNodes();
             Roach roach = null;
             for (Node node : nodes) {
                 try {
-                    roach = client.target("http://" + node.getUrl())
-                            .path(node.getPath())
+                    roach = client.target("http://" + node.getUrl() + ':' + node.getPort())
+                            .path(node.getPath()).path("node")
                             .request(MediaType.APPLICATION_JSON)
                             .get(Roach.class);
                     if (roach != null) {
                         break;
                     }
-                } catch (ClientErrorException clientException) {
+                } catch (Exception exception) {
                     //FIXME
+                    logger.warn(exception.getMessage());
                 }
             }
             if (roach != null) {

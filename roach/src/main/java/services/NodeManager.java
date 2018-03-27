@@ -49,7 +49,7 @@ public class NodeManager {
         for (Node node : nodes) {
             try {
                 int statusCode = client.target("http://" + node.getUrl() + ':' + node.getPort())
-                        .path(node.getPath()).request().get().getStatus();
+                        .path(node.getPath()).path("node").request().get().getStatus();
                 if (statusCode == Status.OK.getStatusCode()) {
                     logger.info(node.toString() + " alive");
                     livingNodes.add(node);

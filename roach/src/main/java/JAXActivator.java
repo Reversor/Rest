@@ -6,6 +6,7 @@ import javax.ejb.Asynchronous;
 import javax.ejb.TimerService;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+import rest.NodeEndpoint;
 import rest.RoachEndpoint;
 
 
@@ -17,6 +18,7 @@ public class JAXActivator extends Application {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(OpenApiResource.class);
         resources.add(RoachEndpoint.class);
+        resources.add(NodeEndpoint.class);
         return resources;
     }
 
