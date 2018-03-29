@@ -40,7 +40,7 @@ public class NodeManager {
     }
 
     public Set<Node> getLivingNodes() {
-        return synchronizedSet(unmodifiableSet(livingNodes));
+        return unmodifiableSet(livingNodes);
     }
 
     @Schedule(second = "*/20", minute = "*", hour = "*", persistent = false)

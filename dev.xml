@@ -13,8 +13,10 @@
         <profile-properties-path>src/main/resources/profiles/dev</profile-properties-path>
         <wildfly.hostname>localhost</wildfly.hostname>
         <wildfly.port>9990</wildfly.port>
-        <wildfly.username>reversor</wildfly.username>
-        <wildfly.password>Revers914</wildfly.password>
+        <wildfly.username>rever</wildfly.username>
+        <wildfly.password>sor</wildfly.password>
+        <database.jndi-name>java:jboss/nodes</database.jndi-name>
+        <database.url>jdbc:h2:mem:nodes;DB_CLOSE_DELAY=-1</database.url>
       </properties>
     </profile>
   </profiles>

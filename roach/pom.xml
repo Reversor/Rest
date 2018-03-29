@@ -63,6 +63,7 @@
         <filtering>true</filtering>
         <includes>
           <include>**/*.properties</include>
+          <include>**/*.csv</include>
         </includes>
       </resource>
     </resources>
@@ -122,13 +123,13 @@
               <goal>add-resource</goal>
             </goals>
             <configuration>
-              <address>subsystem=datasources,data-source=java:jboss/myDs</address>
+              <address>subsystem=datasources,data-source=${database.jndi-name}</address>
               <resources>
                 <resource>
                   <properties>
-                    <jndi-name>java:jboss/myDs</jndi-name>
+                    <jndi-name>${database.jndi-name}</jndi-name>
                     <enabled>true</enabled>
-                    <connection-url>jdbc:h2:mem:node;DB_CLOSE_DELAY=-1</connection-url>
+                    <connection-url>${database.url}</connection-url>
                     <driver-class>org.h2.Driver</driver-class>
                     <driver-name>h2</driver-name>
                     <user-name>sa</user-name>

@@ -4,18 +4,23 @@ import entities.Node;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Singleton;
-import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.sql.DataSource;
 import org.h2.jdbcx.JdbcDataSource;
 import org.jboss.logging.Logger;
 
@@ -24,23 +29,40 @@ public class NodeDao {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    private JdbcDataSource ds = new JdbcDataSource();
+    private DataSource ds;
 
     {
-        Properties prop = new Properties();
+        List<String> stringNodes;
+        Set<Node> nodes;
         try {
-            prop.load(new FileInputStream("db.properties"));
-        } catch (IOException e) {
+            InitialContext cxt = new InitialContext();
+            ds = (DataSource) cxt.lookup("java:jboss/nodes");
 
-        }
+            // FIXME First variant properties
+            FileInputStream fis = new FileInputStream("nodes.properties");
+            Properties prop = new Properties();
+            prop.load(fis);
+            stringNodes = Arrays.asList(prop.getProperty("nodes").split(","));
 
-        try {
+            // FIXME Second variant csv
+            stringNodes = Files.readAllLines(Paths.get("nodes.csv"));
+            // and then parse
 
-            Context initContext = new InitialContext();
+            // FIXME Third variant csv
+            nodes = Files.lines(Paths.get("nodes.csv")).map( string -> {
+                String[] buf = string.split(",");
+                return new Node(buf[0], buf[2], Integer.parseInt(buf[1]));
+            }).collect(Collectors.toSet());
+
         } catch (NamingException e) {
-            e.printStackTrace();
+            logger.warn(e.getMessage());
+            logger.info("Set default ds");
+            ds = new JdbcDataSource();
+            ((JdbcDataSource) ds).setUrl("jdbc:h2:~/node");
+        } catch (IOException e) {
+            logger.warn(e.getMessage());
         }
-        ds.setUrl("jdbc:h2:~/node");
+
         try (Connection conn = ds.getConnection();
                 Statement st = conn.createStatement()) {
             st.addBatch("DROP TABLE IF EXISTS NODE;");
@@ -48,7 +70,7 @@ public class NodeDao {
                     + "id INT AUTO_INCREMENT PRIMARY KEY,"
                     + "url VARCHAR  NOT NULL,"
                     + "path VARCHAR NOT NULL,"
-                    + "port INT DEFAULT 8080"
+                    + "port INT DEFAULT 80"
                     + ");"
             );
             st.addBatch(
