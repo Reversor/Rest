@@ -5,7 +5,11 @@ import static java.util.Collections.unmodifiableSet;
 
 import dao.NodeDao;
 import entities.Node;
+import entities.Roach;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -14,6 +18,9 @@ import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.jboss.logging.Logger;
 
@@ -41,6 +48,21 @@ public class NodeManager {
 
     public Set<Node> getLivingNodes() {
         return unmodifiableSet(livingNodes);
+    }
+
+    public Node getRandomLivingNode() {
+        Random rnd = new Random();
+        List<Node> nodes = new ArrayList<>(livingNodes);
+        return nodes.get(rnd.nextInt(nodes.size()));
+    }
+
+    public boolean sendRoachToNode(Node node, Roach roach) {
+        Response response = client
+                .target("http://" + node.getUrl() + ':' + node.getPort()).path(node.getPath())
+                .path("node")
+                .request()
+                .post(Entity.entity(roach, MediaType.APPLICATION_JSON));
+        return response.getStatus() == 200;
     }
 
     @Schedule(second = "*/20", minute = "*", hour = "*", persistent = false)

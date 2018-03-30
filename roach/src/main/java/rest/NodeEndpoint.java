@@ -13,6 +13,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import org.jboss.logging.Logger;
 import services.RoachService;
 
 @Path("/node")
@@ -24,8 +26,10 @@ import services.RoachService;
 )
 public class NodeEndpoint {
 
+    private final Logger logger = Logger.getLogger(this.getClass());
+
     @Inject
-    RoachService roachService;
+    private RoachService roachService;
 
     @GET
     @Path("/")
@@ -48,10 +52,14 @@ public class NodeEndpoint {
             method = HttpMethod.POST,
             responses = {
                     @ApiResponse(responseCode = "200", description = "All done"),
-                    @ApiResponse(responseCode = "200", description = "Already have the cockroach")
+                    @ApiResponse(responseCode = "400", description = "Already have the cockroach")
             }
     )
     public Response takeRoach(Roach roach) {
-        return Response.ok(roachService.setRoach(roach)).build();
+        if (roachService.setRoach(roach)) {
+            logger.info("Cockroach was received");
+            return Response.ok().build();
+        }
+        return Response.status(Status.BAD_REQUEST).build();
     }
 }

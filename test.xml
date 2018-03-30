@@ -15,7 +15,7 @@
         <wildfly.port>11327</wildfly.port>
         <wildfly.username>rever</wildfly.username>
         <wildfly.password>sor</wildfly.password>
-        <database.jdni-name>java:jboss/nodesTest</database.jdni-name>
+        <database.jndi-name>java:jboss/nodesTest</database.jndi-name>
         <database.url>jdbc:h2:mem:nodes_test;DB_CLOSE_DELAY=-1</database.url>
       </properties>
     </profile>

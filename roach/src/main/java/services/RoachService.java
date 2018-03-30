@@ -1,6 +1,5 @@
 package services;
 
-import dao.NodeDao;
 import entities.Node;
 import entities.Roach;
 import exceptions.CockroachException;
@@ -19,8 +18,6 @@ public class RoachService {
     private Client client;
     @Inject
     private NodeManager nodeManager;
-    @Inject
-    private NodeDao nodeDao;
     private Logger logger = Logger.getLogger(this.getClass());
 
     {
@@ -42,7 +39,6 @@ public class RoachService {
         if ((fill = roach.getFill()) > 0) {
             try {
                 roach.setFill(--fill);
-                // FIXME
                 return roach;
             } finally {
                 roach = null;
@@ -57,7 +53,9 @@ public class RoachService {
         if ((fill = roach.getFill()) > 0) {
             try {
                 roach.setFill(--fill);
-                // FIXME
+                Node randomNode = nodeManager.getRandomLivingNode();
+                nodeManager.sendRoachToNode(randomNode, roach);
+                logger.info("Cockroach has been kicked");
                 return true;
             } finally {
                 roach = null;
@@ -74,7 +72,7 @@ public class RoachService {
     }
 
     public boolean setRoach(Roach roach) {
-        if (roach != null) {
+        if (this.roach != null) {
             return false;
         }
         this.roach = roach;
@@ -97,7 +95,6 @@ public class RoachService {
                         break;
                     }
                 } catch (Exception exception) {
-                    //FIXME
                     logger.warn(exception.getMessage());
                 }
             }

@@ -1,22 +1,15 @@
 package dao;
 
 import entities.Node;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -30,30 +23,16 @@ public class NodeDao {
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private DataSource ds;
+    private String id;
 
     {
-        List<String> stringNodes;
-        Set<Node> nodes;
         try {
-            InitialContext cxt = new InitialContext();
-            ds = (DataSource) cxt.lookup("java:jboss/nodes");
-
-            // FIXME First variant properties
-            FileInputStream fis = new FileInputStream("nodes.properties");
             Properties prop = new Properties();
-            prop.load(fis);
-            stringNodes = Arrays.asList(prop.getProperty("nodes").split(","));
+            prop.load(this.getClass().getResourceAsStream("/nodes.properties"));
+            id = prop.getProperty("id");
 
-            // FIXME Second variant csv
-            stringNodes = Files.readAllLines(Paths.get("nodes.csv"));
-            // and then parse
-
-            // FIXME Third variant csv
-            nodes = Files.lines(Paths.get("nodes.csv")).map( string -> {
-                String[] buf = string.split(",");
-                return new Node(buf[0], buf[2], Integer.parseInt(buf[1]));
-            }).collect(Collectors.toSet());
-
+            InitialContext cxt = new InitialContext();
+            ds = (DataSource) cxt.lookup(prop.getProperty("database.jndi-name"));
         } catch (NamingException e) {
             logger.warn(e.getMessage());
             logger.info("Set default ds");
@@ -67,26 +46,24 @@ public class NodeDao {
                 Statement st = conn.createStatement()) {
             st.addBatch("DROP TABLE IF EXISTS NODE;");
             st.addBatch("CREATE TABLE NODE("
-                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                    + "id VARCHAR PRIMARY KEY,"
                     + "url VARCHAR  NOT NULL,"
                     + "path VARCHAR NOT NULL,"
                     + "port INT DEFAULT 80"
                     + ");"
             );
             st.addBatch(
-                    "INSERT INTO NODE (url, path, port) VALUES "
-                            + "('localhost', 'roach', 9417),"
-                            + "('localhost', 'roach', 8080);"
+                    "INSERT INTO NODE (id, url, path, port) VALUES "
+                            + "('6ad226c9e088a69ab56e88e7d5b93344', 'localhost', 'roach', 9417),"
+                            + "('473f9f49e4927c53ada40075c1605aef', 'localhost', 'roach', 8080);"
             );
             st.executeBatch();
-            conn.commit();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
         }
     }
 
     public boolean insert(Node node) {
-        // TODO
         try (Connection conn = ds.getConnection();
                 PreparedStatement st = conn.
                         prepareStatement("INSERT INTO NODE (url, path, port) VALUES (?,?,?)")) {
@@ -96,7 +73,6 @@ public class NodeDao {
             st.execute();
             return true;
         } catch (SQLException e) {
-            // FIXME
             logger.warn(e.getMessage());
             return false;
         }
@@ -108,6 +84,9 @@ public class NodeDao {
             ResultSet rs = st.executeQuery("SELECT * FROM NODE");
             Set<Node> nodes = new HashSet<>();
             while (rs.next()) {
+                if (id.equals(rs.getString("id"))) {
+                    continue;
+                }
                 String url = rs.getString("url");
                 String path = rs.getString("path");
                 int port = rs.getInt("port");
@@ -115,7 +94,6 @@ public class NodeDao {
             }
             return nodes;
         } catch (SQLException e) {
-            // FIXME
             logger.warn(e.getMessage());
         }
         return null;
