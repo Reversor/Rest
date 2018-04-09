@@ -82,10 +82,10 @@
         <version>3.2.0</version>
         <configuration>
           <failOnMissingWebXml>false</failOnMissingWebXml>
-<!--
-          &lt;!&ndash;dash;&gt;USE FOR DEPLOY&lt;!&ndash;dash;&gt;
-          <outputDirectory>${env.JBOSS_HOME}/standalone/deployments</outputDirectory>
--->
+          <!--
+                    &lt;!&ndash;dash;&gt;USE FOR DEPLOY&lt;!&ndash;dash;&gt;
+                    <outputDirectory>${env.JBOSS_HOME}/standalone/deployments</outputDirectory>
+          -->
         </configuration>
       </plugin>
       <plugin>
@@ -128,7 +128,7 @@
                   <properties>
                     <jndi-name>${database.jndi-name}</jndi-name>
                     <enabled>true</enabled>
-                    <connection-url>${database.url}</connection-url>
+                    <connection-host>${database.url}</connection-host>
                     <driver-class>org.h2.Driver</driver-class>
                     <driver-name>h2</driver-name>
                     <user-name>sa</user-name>

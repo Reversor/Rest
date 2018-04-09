@@ -3,22 +3,33 @@ package services;
 import entities.Node;
 import entities.Roach;
 import exceptions.CockroachException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
 @Singleton
 public class RoachService {
 
+    private Logger logger = Logger.getLogger(this.getClass());
+
     private Roach roach;
     private Client client;
     @Inject
     private NodeManager nodeManager;
-    private Logger logger = Logger.getLogger(this.getClass());
+
+    private long createdTime = Long.MAX_VALUE;
 
     {
         client = ClientBuilder.newClient();
@@ -55,7 +66,6 @@ public class RoachService {
                 roach.setFill(--fill);
                 Node randomNode = nodeManager.getRandomLivingNode();
                 nodeManager.sendRoachToNode(randomNode, roach);
-                logger.info("Cockroach has been kicked");
                 return true;
             } finally {
                 roach = null;
@@ -65,14 +75,31 @@ public class RoachService {
     }
 
     public Roach checkRoach() throws CockroachException {
-        if (roach != null && roach.getName() != null) {
+        if (roach != null) {
             return roach;
         }
         throw new CockroachException("Roach not found");
     }
 
+    public Roach checkOlderCockroach() {
+        Set<Node> nodes = nodeManager.getLivingNodes();
+//        TODO WebTarget, всякий треш
+        List<Builder> requestBuilders = nodes.stream().map(node ->
+                client.target("http://" + node.getHost() + ':' + node.getPort())
+                        .path(node.getPath()).path("node").path("roach").request())
+                .collect(Collectors.toList());
+        Map<Long, Builder> builderMap = requestBuilders.stream().collect(Collectors.toMap(
+                builder -> Long.valueOf(builder.get().getHeaderString("created")),
+                builder -> builder));
+        long older = Collections.min(builderMap.keySet());
+        Builder requestBuilderToNodeWithOlderCockroach = builderMap.remove(older);
+        builderMap.values().forEach(SyncInvoker::delete);
+        return requestBuilderToNodeWithOlderCockroach.accept(MediaType.APPLICATION_JSON)
+                .get(Roach.class);
+    }
+
     public boolean setRoach(Roach roach) {
-        if (this.roach != null) {
+        if (get() != null) {
             return false;
         }
         this.roach = roach;
@@ -87,22 +114,28 @@ public class RoachService {
             Roach roach = null;
             for (Node node : nodes) {
                 try {
-                    roach = client.target("http://" + node.getUrl() + ':' + node.getPort())
-                            .path(node.getPath()).path("node")
-                            .request(MediaType.APPLICATION_JSON)
-                            .get(Roach.class);
+                    Response response = client
+                            .target("http://" + node.getHost() + ':' + node.getPort())
+                            .path(node.getPath()).path("node").path("roach").request().get();
+                    long time = Long.valueOf(response.getHeaderString("created"));
+                    roach = response.readEntity(Roach.class);
                     if (roach != null) {
                         break;
                     }
-                } catch (Exception exception) {
-                    logger.warn(exception.getMessage());
+                } catch (ClientErrorException exception) {
+                    logger.warn("Client exception: " + exception.getMessage());
                 }
             }
             if (roach != null) {
                 return roach;
             } else {
+                createdTime = System.currentTimeMillis();
                 return this.roach = new Roach("Zhenya", (byte) 0);
             }
         }
+    }
+
+    public long getCreatedTime() {
+        return createdTime;
     }
 }

@@ -67,7 +67,7 @@ public class NodeDao {
         try (Connection conn = ds.getConnection();
                 PreparedStatement st = conn.
                         prepareStatement("INSERT INTO NODE (url, path, port) VALUES (?,?,?)")) {
-            st.setString(1, node.getUrl());
+            st.setString(1, node.getHost());
             st.setString(2, node.getPath());
             st.setInt(3, node.getPort());
             st.execute();

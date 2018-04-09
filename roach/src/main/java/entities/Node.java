@@ -2,23 +2,23 @@ package entities;
 
 public class Node {
 
-    private String url;
+    private String host;
     private String path;
     private int port;
 
-    public Node(String url, String path, int port) {
-        this.url = url;
+    public Node(String host, String path, int port) {
+        this.host = host;
         this.path = path;
         this.port = port;
     }
 
-    public String getUrl() {
+    public String getHost() {
 
-        return url;
+        return host;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setHost(String host) {
+        this.host = host;
     }
 
     public String getPath() {
@@ -39,7 +39,7 @@ public class Node {
 
     @Override
     public String toString() {
-        return url + ':' + port + '/' + path;
+        return host + ':' + port + '/' + path;
     }
 
     @Override
@@ -49,10 +49,10 @@ public class Node {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj != null && obj instanceof Node) {
+        if (obj instanceof Node) {
             Node node = (Node) obj;
             return node == this || node.port == port
-                    && url.equalsIgnoreCase(node.url)
+                    && host.equalsIgnoreCase(node.host)
                     && path.equalsIgnoreCase(node.path);
         }
         return false;

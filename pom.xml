@@ -9,7 +9,6 @@
   <version>1.0-SNAPSHOT</version>
   <name>Rest test</name>
   <description>Test project</description>
-  <url>http://locomizer.com</url>
   <packaging>pom</packaging>
 
   <modules>

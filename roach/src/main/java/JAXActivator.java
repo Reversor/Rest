@@ -1,5 +1,7 @@
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
 import java.util.HashSet;
 import java.util.Set;
 import javax.ejb.Asynchronous;
@@ -12,6 +14,10 @@ import rest.RoachEndpoint;
 
 @ApplicationPath("/")
 public class JAXActivator extends Application {
+
+    {
+        OpenAPI openAPI;
+    }
 
     @Override
     public Set<Class<?>> getClasses() {

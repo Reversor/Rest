@@ -6,6 +6,7 @@ import static java.util.Collections.unmodifiableSet;
 import dao.NodeDao;
 import entities.Node;
 import entities.Roach;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -27,18 +29,20 @@ import org.jboss.logging.Logger;
 @Singleton
 public class NodeManager {
 
+    private Logger logger = Logger.getLogger(this.getClass());
+
     @Inject
     private NodeDao nodeDao;
     private Client client;
     private Set<Node> nodes;
     private Set<Node> livingNodes;
-    private Logger logger = Logger.getLogger(this.getClass());
-
     @PostConstruct
     private void init() {
         nodes = nodeDao.getAll();
         livingNodes = synchronizedSet(new HashSet<>());
         client = ClientBuilder.newClient();
+        // Cockroach synchronization
+        checkNodes();
     }
 
     @PreDestroy
@@ -58,7 +62,7 @@ public class NodeManager {
 
     public boolean sendRoachToNode(Node node, Roach roach) {
         Response response = client
-                .target("http://" + node.getUrl() + ':' + node.getPort()).path(node.getPath())
+                .target("http://" + node.getHost() + ':' + node.getPort()).path(node.getPath())
                 .path("node")
                 .request()
                 .post(Entity.entity(roach, MediaType.APPLICATION_JSON));
@@ -70,7 +74,7 @@ public class NodeManager {
         logger.info("Check nodes");
         for (Node node : nodes) {
             try {
-                int statusCode = client.target("http://" + node.getUrl() + ':' + node.getPort())
+                int statusCode = client.target("http://" + node.getHost() + ':' + node.getPort())
                         .path(node.getPath()).path("node").request().get().getStatus();
                 if (statusCode == Status.OK.getStatusCode()) {
                     logger.info(node.toString() + " alive");
@@ -79,7 +83,7 @@ public class NodeManager {
                     logger.info(node.toString() + " dead");
                     livingNodes.remove(node);
                 }
-            } catch (Exception e) {
+            } catch (ClientErrorException e) {
                 logger.warn(node.toString() + " dead with message:" + e.getMessage());
                 livingNodes.remove(node);
             }
