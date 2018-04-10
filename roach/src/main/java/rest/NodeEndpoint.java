@@ -93,9 +93,7 @@ public class NodeEndpoint {
     public Response checkNodeForCockroach() {
         try {
             Roach roach = roachService.checkRoach();
-            return Response.ok()
-                    .type(MediaType.APPLICATION_JSON)
-                    .entity(roach)
+            return Response.ok(roach, MediaType.APPLICATION_JSON)
                     .header("created", roachService.getCreatedTime())
                     .build();
         } catch (CockroachException e) {

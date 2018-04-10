@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
 
@@ -77,12 +78,12 @@ public class RoachService {
         if (nodes.isEmpty()) {
             return roach;
         }
-        Map<Long, Node> nodesWithCockroach = new HashMap<>();
+        Map<Long, WebTarget> nodesWithCockroach = new HashMap<>();
         for (Node node : nodes) {
-            String createdStr = nodeManager.nodeToTarget(node).path("node/roach").request().get()
-                    .getHeaderString("created");
+            WebTarget target = nodeManager.nodeToTarget(node).path("node/roach");
+            String createdStr = target.request().get().getHeaderString("created");
             if (createdStr != null) {
-                nodesWithCockroach.put(Long.valueOf(createdStr), node);
+                nodesWithCockroach.put(Long.valueOf(createdStr), target);
             }
         }
         // checked
@@ -91,17 +92,17 @@ public class RoachService {
         }
         long olderCockroachCreatedTime = Collections.min(nodesWithCockroach.keySet());
         if (olderCockroachCreatedTime >= createdTime) {
-            nodesWithCockroach.values().stream().map(nodeManager::nodeToTarget)
-                    .forEach(webTarget -> webTarget.path("node/roach").request().delete());
+            nodesWithCockroach.values()
+                    .forEach(webTarget -> webTarget.request().delete());
             return roach;
         }
         killRoach();
-        Node nodeWithOlderCockroach = nodesWithCockroach.get(olderCockroachCreatedTime);
+        WebTarget nodeWithOlderCockroach = nodesWithCockroach.get(olderCockroachCreatedTime);
         if (nodeWithOlderCockroach != null) {
             nodesWithCockroach.remove(olderCockroachCreatedTime);
-            nodesWithCockroach.values().stream().map(nodeManager::nodeToTarget)
-                    .forEach(webTarget -> webTarget.path("node/roach").request().delete());
-            return nodeManager.nodeToTarget(nodeWithOlderCockroach).request()
+            nodesWithCockroach.values()
+                    .forEach(webTarget -> webTarget.request().delete());
+            return nodeWithOlderCockroach.request()
                     .accept(MediaType.APPLICATION_JSON).get(Roach.class);
         }
         return roach;
@@ -130,8 +131,7 @@ public class RoachService {
             if (roach == null) {
                 throw new CockroachException();
             }
-            Roach roach = checkOlderCockroach();
-            return this.roach;
+            return checkOlderCockroach();
         } catch (CockroachException cockroachException) {
             Roach roach = checkOlderCockroach();
             if (roach != null) {
