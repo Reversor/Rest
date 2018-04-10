@@ -3,37 +3,26 @@ package services;
 import entities.Node;
 import entities.Roach;
 import exceptions.CockroachException;
+import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.SyncInvoker;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
 @Singleton
 public class RoachService {
 
     private Logger logger = Logger.getLogger(this.getClass());
-
     private Roach roach;
-    private Client client;
     @Inject
     private NodeManager nodeManager;
-
     private long createdTime = Long.MAX_VALUE;
-
-    {
-        client = ClientBuilder.newClient();
-    }
 
     public boolean feed() {
         byte fill = roach.getFill();
@@ -45,7 +34,7 @@ public class RoachService {
     }
 
     public Roach lure() throws CockroachException {
-        byte fill = 0;
+        byte fill;
         checkRoach();
         if ((fill = roach.getFill()) > 0) {
             try {
@@ -59,14 +48,15 @@ public class RoachService {
     }
 
     public boolean kick() throws CockroachException {
-        byte fill = 0;
+        byte fill;
         checkRoach();
         if ((fill = roach.getFill()) > 0) {
             try {
                 roach.setFill(--fill);
                 Node randomNode = nodeManager.getRandomLivingNode();
-                nodeManager.sendRoachToNode(randomNode, roach);
-                return true;
+                return nodeManager.nodeToTarget(randomNode).path("node")
+                        .request()
+                        .post(Entity.entity(roach, MediaType.APPLICATION_JSON)).getStatus() == 200;
             } finally {
                 roach = null;
             }
@@ -81,56 +71,83 @@ public class RoachService {
         throw new CockroachException("Roach not found");
     }
 
-    public Roach checkOlderCockroach() {
+    private Roach checkOlderCockroach() {
         Set<Node> nodes = nodeManager.getLivingNodes();
-//        TODO WebTarget, всякий треш
-        List<Builder> requestBuilders = nodes.stream().map(node ->
-                client.target("http://" + node.getHost() + ':' + node.getPort())
-                        .path(node.getPath()).path("node").path("roach").request())
-                .collect(Collectors.toList());
-        Map<Long, Builder> builderMap = requestBuilders.stream().collect(Collectors.toMap(
-                builder -> Long.valueOf(builder.get().getHeaderString("created")),
-                builder -> builder));
-        long older = Collections.min(builderMap.keySet());
-        Builder requestBuilderToNodeWithOlderCockroach = builderMap.remove(older);
-        builderMap.values().forEach(SyncInvoker::delete);
-        return requestBuilderToNodeWithOlderCockroach.accept(MediaType.APPLICATION_JSON)
-                .get(Roach.class);
+        // checked
+        if (nodes.isEmpty()) {
+            return roach;
+        }
+        Map<Long, Node> nodesWithCockroach = new HashMap<>();
+        for (Node node : nodes) {
+            String createdStr = nodeManager.nodeToTarget(node).path("node/roach").request().get()
+                    .getHeaderString("created");
+            if (createdStr != null) {
+                nodesWithCockroach.put(Long.valueOf(createdStr), node);
+            }
+        }
+        // checked
+        if (nodesWithCockroach.isEmpty()) {
+            return roach;
+        }
+        long olderCockroachCreatedTime = Collections.min(nodesWithCockroach.keySet());
+        if (olderCockroachCreatedTime >= createdTime) {
+            nodesWithCockroach.values().stream().map(nodeManager::nodeToTarget)
+                    .forEach(webTarget -> webTarget.path("node/roach").request().delete());
+            return roach;
+        }
+        killRoach();
+        Node nodeWithOlderCockroach = nodesWithCockroach.get(olderCockroachCreatedTime);
+        if (nodeWithOlderCockroach != null) {
+            nodesWithCockroach.remove(olderCockroachCreatedTime);
+            nodesWithCockroach.values().stream().map(nodeManager::nodeToTarget)
+                    .forEach(webTarget -> webTarget.path("node/roach").request().delete());
+            return nodeManager.nodeToTarget(nodeWithOlderCockroach).request()
+                    .accept(MediaType.APPLICATION_JSON).get(Roach.class);
+        }
+        return roach;
     }
 
-    public boolean setRoach(Roach roach) {
-        if (get() != null) {
+    public boolean setRoach(Roach roach, long createdTime) {
+        if (roach == null) {
             return false;
         }
+        this.createdTime = createdTime;
         this.roach = roach;
+        return true;
+    }
+
+    public boolean killRoach() {
+        if (roach == null) {
+            return false;
+        }
+        createdTime = Long.MAX_VALUE;
+        this.roach = null;
         return true;
     }
 
     public Roach get() {
         try {
-            return checkRoach();
-        } catch (CockroachException cockroachException) {
-            Set<Node> nodes = nodeManager.getLivingNodes();
-            Roach roach = null;
-            for (Node node : nodes) {
-                try {
-                    Response response = client
-                            .target("http://" + node.getHost() + ':' + node.getPort())
-                            .path(node.getPath()).path("node").path("roach").request().get();
-                    long time = Long.valueOf(response.getHeaderString("created"));
-                    roach = response.readEntity(Roach.class);
-                    if (roach != null) {
-                        break;
-                    }
-                } catch (ClientErrorException exception) {
-                    logger.warn("Client exception: " + exception.getMessage());
-                }
+            if (roach == null) {
+                throw new CockroachException();
             }
+            Roach roach = checkOlderCockroach();
+            return this.roach;
+        } catch (CockroachException cockroachException) {
+            Roach roach = checkOlderCockroach();
             if (roach != null) {
                 return roach;
             } else {
                 createdTime = System.currentTimeMillis();
-                return this.roach = new Roach("Zhenya", (byte) 0);
+                Properties prop = new Properties();
+                String name;
+                try {
+                    prop.load(this.getClass().getResourceAsStream("/roach.properties"));
+                    name = prop.getProperty("name");
+                } catch (IOException e) {
+                    logger.warn(e.getMessage());
+                    name = "Alenya";
+                }
+                return this.roach = new Roach(name, (byte) 0);
             }
         }
     }

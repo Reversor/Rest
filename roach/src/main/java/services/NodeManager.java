@@ -5,26 +5,23 @@ import static java.util.Collections.unmodifiableSet;
 
 import dao.NodeDao;
 import entities.Node;
-import entities.Roach;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
 @Singleton
 public class NodeManager {
@@ -36,18 +33,25 @@ public class NodeManager {
     private Client client;
     private Set<Node> nodes;
     private Set<Node> livingNodes;
+
     @PostConstruct
     private void init() {
         nodes = nodeDao.getAll();
         livingNodes = synchronizedSet(new HashSet<>());
-        client = ClientBuilder.newClient();
-        // Cockroach synchronization
+        client = new ResteasyClientBuilder()
+                .connectionCheckoutTimeout(300, TimeUnit.MILLISECONDS)
+                .connectTimeout(300, TimeUnit.MILLISECONDS)
+                .build();
         checkNodes();
     }
 
     @PreDestroy
     private void destroy() {
         client.close();
+    }
+
+    public WebTarget nodeToTarget(Node node) {
+        return client.target("http://" + node.toString());
     }
 
     public Set<Node> getLivingNodes() {
@@ -60,22 +64,14 @@ public class NodeManager {
         return nodes.get(rnd.nextInt(nodes.size()));
     }
 
-    public boolean sendRoachToNode(Node node, Roach roach) {
-        Response response = client
-                .target("http://" + node.getHost() + ':' + node.getPort()).path(node.getPath())
-                .path("node")
-                .request()
-                .post(Entity.entity(roach, MediaType.APPLICATION_JSON));
-        return response.getStatus() == 200;
-    }
-
     @Schedule(second = "*/20", minute = "*", hour = "*", persistent = false)
     public void checkNodes() {
         logger.info("Check nodes");
         for (Node node : nodes) {
-            try {
-                int statusCode = client.target("http://" + node.getHost() + ':' + node.getPort())
-                        .path(node.getPath()).path("node").request().get().getStatus();
+            try (Response response = nodeToTarget(node).path("node").request().get()
+            ) {
+                int statusCode = response.getStatus();
+                response.close();
                 if (statusCode == Status.OK.getStatusCode()) {
                     logger.info(node.toString() + " alive");
                     livingNodes.add(node);
@@ -83,7 +79,7 @@ public class NodeManager {
                     logger.info(node.toString() + " dead");
                     livingNodes.remove(node);
                 }
-            } catch (ClientErrorException e) {
+            } catch (Exception e) {
                 logger.warn(node.toString() + " dead with message:" + e.getMessage());
                 livingNodes.remove(node);
             }

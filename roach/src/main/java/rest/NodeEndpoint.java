@@ -12,10 +12,12 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -62,7 +64,7 @@ public class NodeEndpoint {
     )
     public Response delete() {
         // TODO delete cockroach from current node
-        if (roachService.setRoach(null)) {
+        if (roachService.killRoach()) {
             return Response.ok("Roach deleted").build();
         }
         return Response.status(Status.SERVICE_UNAVAILABLE).build();
@@ -88,11 +90,11 @@ public class NodeEndpoint {
                     )
             }
     )
-    @Produces(MediaType.APPLICATION_JSON)
     public Response checkNodeForCockroach() {
         try {
             Roach roach = roachService.checkRoach();
             return Response.ok()
+                    .type(MediaType.APPLICATION_JSON)
                     .entity(roach)
                     .header("created", roachService.getCreatedTime())
                     .build();
@@ -122,9 +124,9 @@ public class NodeEndpoint {
                     )
             }
     )
-    public Response takeRoach(Roach roach) {
+    public Response takeRoach(Roach roach, @HeaderParam("created") long createdTime) {
         // FIXME
-        if (roachService.setRoach(roach)) {
+        if (roachService.setRoach(roach, createdTime)) {
             logger.info("Cockroach was received");
             return Response.ok().build();
         }

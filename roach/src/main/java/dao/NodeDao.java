@@ -32,7 +32,7 @@ public class NodeDao {
             id = prop.getProperty("id");
 
             InitialContext cxt = new InitialContext();
-            ds = (DataSource) cxt.lookup(prop.getProperty("database.jndi-name"));
+            ds = (DataSource) cxt.lookup(prop.getProperty("jndi-name"));
         } catch (NamingException e) {
             logger.warn(e.getMessage());
             logger.info("Set default ds");
