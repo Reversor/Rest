@@ -63,6 +63,7 @@
 
   <build>
     <finalName>roach</finalName>
+    <outputDirectory>target/${profile-output-path}</outputDirectory>
     <resources>
       <resource>
         <directory>${profile-properties-path}</directory>

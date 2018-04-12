@@ -12,12 +12,14 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.client.Entity;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -78,11 +80,7 @@ public class NodeEndpoint {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Roach is here, look",
-                            headers = {
-                                    @Header(name = "created",
-                                            description = "time creating a cockroach")
-                            }
+                            description = "Roach is here, look"
                     ),
                     @ApiResponse(
                             responseCode = "404",
@@ -93,17 +91,38 @@ public class NodeEndpoint {
     public Response checkNodeForCockroach() {
         try {
             Roach roach = roachService.checkRoach();
-            return Response.ok(roach, MediaType.APPLICATION_JSON)
-                    .header("created", roachService.getCreatedTime())
-                    .build();
+            return Response.ok(roach, MediaType.APPLICATION_JSON).build();
         } catch (CockroachException e) {
             return Response.status(Status.NOT_FOUND).build();
         }
     }
 
+    @GET
+    @Path("/roach/creation-time")
+    @Operation(
+            summary = "Get cockroach created time",
+            method = HttpMethod.GET,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Roach not found"
+                    )
+            }
+    )
+    public Response checkCockroachCreatedTime() {
+        long created = roachService.getCreatedTime();
+        if (created == Long.MAX_VALUE) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+        return Response.ok(roachService.getCreatedTime()).build();
+    }
+
     @POST
     @Path("/roach")
-    @Consumes(MediaType.APPLICATION_JSON)
+//    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Take cockroach",
             method = HttpMethod.POST,
@@ -122,13 +141,12 @@ public class NodeEndpoint {
                     )
             }
     )
-    public Response takeRoach(Roach roach, @HeaderParam("created") long createdTime) {
+    public Response takeRoach(@QueryParam("created") long created, Roach roach) {
         // FIXME
-        if (roachService.setRoach(roach, createdTime)) {
+        if (roachService.setRoach(roach, created)) {
             logger.info("Cockroach was received");
             return Response.ok().build();
         }
-        return Response.status(Status.BAD_REQUEST)
-                .header("created", roachService.getCreatedTime()).build();
+        return Response.status(Status.BAD_REQUEST).build();
     }
 }

@@ -15,10 +15,6 @@ import rest.RoachEndpoint;
 @ApplicationPath("/")
 public class JAXActivator extends Application {
 
-    {
-        OpenAPI openAPI;
-    }
-
     @Override
     public Set<Class<?>> getClasses() {
         Set<Class<?>> resources = new HashSet<>();

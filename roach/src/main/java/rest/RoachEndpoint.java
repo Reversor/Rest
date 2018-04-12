@@ -2,6 +2,7 @@ package rest;
 
 import entities.Roach;
 import exceptions.CockroachException;
+import exceptions.NodeException;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -97,6 +98,8 @@ public class RoachEndpoint implements CockroachEndpoint {
             return Response.ok("Cockroach hungry").build();
         } catch (CockroachException e) {
             return Response.status(Status.NOT_FOUND).build();
+        } catch (NodeException e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
         }
     }
 

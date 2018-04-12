@@ -10,6 +10,7 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
+        <profile-output-path>testTarget</profile-output-path>
         <profile-properties-path>src/main/resources/profiles/test</profile-properties-path>
         <wildfly.hostname>localhost</wildfly.hostname>
         <wildfly.port>11327</wildfly.port>

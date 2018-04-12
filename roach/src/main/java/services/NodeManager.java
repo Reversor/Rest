@@ -50,8 +50,10 @@ public class NodeManager {
         client.close();
     }
 
-    public WebTarget nodeToTarget(Node node) {
-        return client.target("http://" + node.toString());
+    public WebTarget nodeToTarget(Node node, String path) {
+        WebTarget target = client.target("http://" + node.toString());
+        return path == null ? target : target.path(path);
+
     }
 
     public Set<Node> getLivingNodes() {
@@ -68,7 +70,7 @@ public class NodeManager {
     public void checkNodes() {
         logger.info("Check nodes");
         for (Node node : nodes) {
-            try (Response response = nodeToTarget(node).path("node").request().get()
+            try (Response response = nodeToTarget(node, "node").request().get()
             ) {
                 int statusCode = response.getStatus();
                 response.close();
