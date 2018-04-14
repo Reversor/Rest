@@ -7,6 +7,7 @@ import exceptions.NodeException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -37,18 +38,23 @@ public class RoachService {
     }
 
     public Roach lure() throws CockroachException {
-        // FIXME Oh wait
-        byte fill;
-        checkRoach();
-        if ((fill = roach.getFill()) > 0) {
-            try {
-                roach.setFill(--fill);
-                return roach;
-            } finally {
-                roach = null;
-            }
+        Set<Node> nodes = nodeManager.getLivingNodes();
+        if (nodes.isEmpty()) {
+            return roach;
         }
-        return null;
+        Roach roach = null;
+        Iterator<Node> it = nodes.iterator();
+        while (roach == null && it.hasNext()) {
+            Node node = it.next();
+            Response response = nodeManager.nodeToTarget(node, "node/roach/catch").request().get();
+            if (response.getStatus() == 200) {
+                roach = response.readEntity(Roach.class);
+                nodeManager.nodeToTarget(node, "node/roach").request().delete();
+            }
+
+        }
+        if (roach == null) throw new CockroachException();
+        return roach;
     }
 
     public boolean kick() throws CockroachException, NodeException {
@@ -81,25 +87,21 @@ public class RoachService {
     }
 
     private Roach checkOlderCockroach() {
-        //FIXME HEAVY
         Set<Node> nodes = nodeManager.getLivingNodes();
-        // checked
         if (nodes.isEmpty()) {
             return roach;
         }
         Map<Long, WebTarget> nodesWithCockroach = new HashMap<>();
         for (Node node : nodes) {
             Long created;
-            try (Response response = nodeManager.nodeToTarget(node, "node/roach/creation-time")
+            try (Response response = nodeManager.nodeToTarget(node, "node/roach/creation")
                     .request().get()) {
                 if (response.getStatus() == 200) {
                     created = response.readEntity(Long.TYPE);
-//                    created = Long.valueOf(String.valueOf(response.getEntity()));
                     nodesWithCockroach.put(created, nodeManager.nodeToTarget(node, "node/roach"));
                 }
             }
         }
-        // checked
         if (nodesWithCockroach.isEmpty()) {
             return roach;
         }
@@ -111,6 +113,7 @@ public class RoachService {
         }
         killRoach();
         WebTarget nodeWithOlderCockroach = nodesWithCockroach.get(olderCockroachCreatedTime);
+        // РАСПОТРОШИТЬ
         if (nodeWithOlderCockroach != null) {
             nodesWithCockroach.remove(olderCockroachCreatedTime);
             nodesWithCockroach.values()

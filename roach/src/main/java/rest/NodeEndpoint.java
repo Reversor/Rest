@@ -98,9 +98,9 @@ public class NodeEndpoint {
     }
 
     @GET
-    @Path("/roach/creation-time")
+    @Path("/roach/creation")
     @Operation(
-            summary = "Get cockroach created time",
+            summary = "Get cockroach time of creation",
             method = HttpMethod.GET,
             responses = {
                     @ApiResponse(
@@ -120,9 +120,28 @@ public class NodeEndpoint {
         return Response.ok(roachService.getCreatedTime()).build();
     }
 
+    @DELETE
+    @Path("/catch")
+    @Operation(
+            summary = "Catch cockroach"
+    )
+    public Response catchRoach() {
+        try {
+            Roach roach = roachService.checkRoach();
+            byte fill;
+            if ((fill = roach.getFill()) <= 0) {
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+            }
+            roach.setFill(--fill);
+            roachService.killRoach();
+            return Response.ok(roach).build();
+        } catch (CockroachException e) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+    }
+
     @POST
     @Path("/roach")
-//    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Take cockroach",
             method = HttpMethod.POST,
