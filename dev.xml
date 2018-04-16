@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <profiles>
+    <profile>
+      <id>dev</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <profile-output-path>devTarget</profile-output-path>
+        <profile-properties-path>src/main/resources/profiles/dev</profile-properties-path>
+        <wildfly.hostname>localhost</wildfly.hostname>
+        <wildfly.port>9990</wildfly.port>
+        <wildfly.username>rever</wildfly.username>
+        <wildfly.password>sor</wildfly.password>
+        <database.jndi-name>java:jboss/nodes</database.jndi-name>
+        <database.url>jdbc:h2:mem:nodes;DB_CLOSE_DELAY=-1</database.url>
+      </properties>
+    </profile>
+  </profiles>
+</settings>
