@@ -65,7 +65,6 @@ public class NodeEndpoint {
             }
     )
     public Response delete() {
-        // TODO delete cockroach from current node
         if (roachService.killRoach()) {
             return Response.ok("Roach deleted").build();
         }
@@ -120,26 +119,6 @@ public class NodeEndpoint {
         return Response.ok(roachService.getCreatedTime()).build();
     }
 
-    @DELETE
-    @Path("/catch")
-    @Operation(
-            summary = "Catch cockroach"
-    )
-    public Response catchRoach() {
-        try {
-            Roach roach = roachService.checkRoach();
-            byte fill;
-            if ((fill = roach.getFill()) <= 0) {
-                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-            }
-            roach.setFill(--fill);
-            roachService.killRoach();
-            return Response.ok(roach).build();
-        } catch (CockroachException e) {
-            return Response.status(Status.NOT_FOUND).build();
-        }
-    }
-
     @POST
     @Path("/roach")
     @Operation(
@@ -161,7 +140,6 @@ public class NodeEndpoint {
             }
     )
     public Response takeRoach(@QueryParam("created") long created, Roach roach) {
-        // FIXME
         if (roachService.setRoach(roach, created)) {
             logger.info("Cockroach was received");
             return Response.ok().build();

@@ -38,22 +38,31 @@ public class RoachService {
     }
 
     public Roach lure() throws CockroachException {
+        if (roach != null) return roach;
         Set<Node> nodes = nodeManager.getLivingNodes();
         if (nodes.isEmpty()) {
             return roach;
         }
-        Roach roach = null;
         Iterator<Node> it = nodes.iterator();
         while (roach == null && it.hasNext()) {
             Node node = it.next();
-            Response response = nodeManager.nodeToTarget(node, "node/roach/catch").request().get();
+            Response response = nodeManager.nodeToTarget(node, "node/roach").request().get();
             if (response.getStatus() == 200) {
-                roach = response.readEntity(Roach.class);
-                nodeManager.nodeToTarget(node, "node/roach").request().delete();
+                Roach receivedRoach = response.readEntity(Roach.class);
+                byte fill = receivedRoach.getFill();
+                if (fill > 0) {
+                    receivedRoach.setFill(--fill);
+                    this.createdTime = nodeManager.nodeToTarget(node, "node/roach/creation")
+                            .request().get(Long.TYPE);
+                    nodeManager.nodeToTarget(node, "node/roach").request().delete().close();
+                    roach = receivedRoach;
+                }
+                break;
             }
-
         }
-        if (roach == null) throw new CockroachException();
+        if (roach == null) {
+            throw new CockroachException();
+        }
         return roach;
     }
 
@@ -113,7 +122,6 @@ public class RoachService {
         }
         killRoach();
         WebTarget nodeWithOlderCockroach = nodesWithCockroach.get(olderCockroachCreatedTime);
-        // РАСПОТРОШИТЬ
         if (nodeWithOlderCockroach != null) {
             nodesWithCockroach.remove(olderCockroachCreatedTime);
             nodesWithCockroach.values()
