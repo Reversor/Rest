@@ -1,6 +1,6 @@
 package rest;
 
-import entities.Roach;
+import entities.Cockroach;
 import exceptions.CockroachException;
 import exceptions.NodeException;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -17,15 +17,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import org.jboss.logging.Logger;
 import services.RoachService;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @OpenAPIDefinition(info = @Info(title = "Roach Heaven"))
 public class RoachEndpoint implements CockroachEndpoint {
-
-    private final Logger logger = Logger.getLogger(this.getClass());
 
     @Inject
     private RoachService roachService;
@@ -114,7 +111,7 @@ public class RoachEndpoint implements CockroachEndpoint {
             }
     )
     @Override
-    public Roach get() {
+    public Cockroach get() {
         return roachService.get();
     }
 

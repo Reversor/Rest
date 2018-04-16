@@ -3,7 +3,6 @@ package dao;
 import entities.Node;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -60,21 +59,6 @@ public class NodeDao {
             st.executeBatch();
         } catch (SQLException e) {
             logger.warn(e.getMessage());
-        }
-    }
-
-    public boolean insert(Node node) {
-        try (Connection conn = ds.getConnection();
-                PreparedStatement st = conn.
-                        prepareStatement("INSERT INTO NODE (url, path, port) VALUES (?,?,?)")) {
-            st.setString(1, node.getHost());
-            st.setString(2, node.getPath());
-            st.setInt(3, node.getPort());
-            st.execute();
-            return true;
-        } catch (SQLException e) {
-            logger.warn(e.getMessage());
-            return false;
         }
     }
 

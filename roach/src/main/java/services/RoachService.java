@@ -1,7 +1,7 @@
 package services;
 
+import entities.Cockroach;
 import entities.Node;
-import entities.Roach;
 import exceptions.CockroachException;
 import exceptions.NodeException;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
 public class RoachService {
 
     private Logger logger = Logger.getLogger(this.getClass());
-    private Roach roach;
+    private Cockroach roach;
     @Inject
     private NodeManager nodeManager;
     private long createdTime = Long.MAX_VALUE;
@@ -37,8 +37,10 @@ public class RoachService {
         return false;
     }
 
-    public Roach lure() throws CockroachException {
-        if (roach != null) return roach;
+    public Cockroach lure() throws CockroachException {
+        if (roach != null) {
+            return roach;
+        }
         Set<Node> nodes = nodeManager.getLivingNodes();
         if (nodes.isEmpty()) {
             return roach;
@@ -48,7 +50,7 @@ public class RoachService {
             Node node = it.next();
             Response response = nodeManager.nodeToTarget(node, "node/roach").request().get();
             if (response.getStatus() == 200) {
-                Roach receivedRoach = response.readEntity(Roach.class);
+                Cockroach receivedRoach = response.readEntity(Cockroach.class);
                 byte fill = receivedRoach.getFill();
                 if (fill > 0) {
                     receivedRoach.setFill(--fill);
@@ -88,14 +90,14 @@ public class RoachService {
         return false;
     }
 
-    public Roach checkRoach() throws CockroachException {
+    public Cockroach checkRoach() throws CockroachException {
         if (roach != null) {
             return roach;
         }
         throw new CockroachException("Roach not found");
     }
 
-    private Roach checkOlderCockroach() {
+    private Cockroach checkOlderCockroach() {
         Set<Node> nodes = nodeManager.getLivingNodes();
         if (nodes.isEmpty()) {
             return roach;
@@ -127,12 +129,12 @@ public class RoachService {
             nodesWithCockroach.values()
                     .forEach(webTarget -> webTarget.request().delete());
             return nodeWithOlderCockroach.request()
-                    .accept(MediaType.APPLICATION_JSON).get(Roach.class);
+                    .accept(MediaType.APPLICATION_JSON).get(Cockroach.class);
         }
         return roach;
     }
 
-    public boolean setRoach(Roach roach, long createdTime) {
+    public boolean setRoach(Cockroach roach, long createdTime) {
         if (roach == null) {
             return false;
         }
@@ -150,15 +152,14 @@ public class RoachService {
         return true;
     }
 
-    public Roach get() {
-        //FIXME
+    public Cockroach get() {
         try {
             if (roach == null) {
                 throw new CockroachException();
             }
             return checkOlderCockroach();
         } catch (CockroachException cockroachException) {
-            Roach roach = checkOlderCockroach();
+            Cockroach roach = checkOlderCockroach();
             if (roach != null) {
                 return roach;
             } else {
@@ -172,7 +173,7 @@ public class RoachService {
                     logger.warn(e.getMessage());
                     name = "Alenya";
                 }
-                return this.roach = new Roach(name, (byte) 0);
+                return this.roach = new Cockroach(name, (byte) 0);
             }
         }
     }

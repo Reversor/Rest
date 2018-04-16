@@ -1,6 +1,6 @@
 package rest;
 
-import entities.Roach;
+import entities.Cockroach;
 import exceptions.CockroachException;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -9,17 +9,12 @@ import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -89,7 +84,7 @@ public class NodeEndpoint {
     )
     public Response checkNodeForCockroach() {
         try {
-            Roach roach = roachService.checkRoach();
+            Cockroach roach = roachService.checkRoach();
             return Response.ok(roach, MediaType.APPLICATION_JSON).build();
         } catch (CockroachException e) {
             return Response.status(Status.NOT_FOUND).build();
@@ -139,7 +134,7 @@ public class NodeEndpoint {
                     )
             }
     )
-    public Response takeRoach(@QueryParam("created") long created, Roach roach) {
+    public Response takeRoach(@QueryParam("created") long created, Cockroach roach) {
         if (roachService.setRoach(roach, created)) {
             logger.info("Cockroach was received");
             return Response.ok().build();
